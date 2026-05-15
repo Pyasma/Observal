@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Pyasma <pranyasharma55555@gamil.com>
+# SPDX-License-Identifier: AGPL-3.0-only
 
 from __future__ import annotations
 
@@ -446,9 +448,13 @@ def test_sandbox_saving_changes():
     }
     with (
         patch("observal_cli.config.resolve_alias") as mock_resolve,
+        patch("observal_cli.client.post") as mock_post,
         patch("observal_cli.client.put") as mock_put,
     ):
         mock_resolve.return_value= "sandbox-123"
+        mock_post.return_value = {
+            "id": "sandbox-123",
+        }
         mock_put.return_value =  mock_result
 
         result = runner.invoke(
@@ -470,6 +476,8 @@ def test_sandbox_saving_changes():
             "name" : "new-name",
         }
     )
+    mock_post.assert_called_once_with("/api/v1/sandboxes/sandbox-123/start-edit")
+
     assert "✓ Updated" in result.output
 
  
@@ -546,5 +554,5 @@ def test_sandbox_delete_aborted():
 
         result = runner.invoke(app, ["sandbox", "delete", "analytics"])
 
-    assert result.exit_code != 0  
+    assert result.exit_code == 1  
     mock_delete.assert_not_called()  
